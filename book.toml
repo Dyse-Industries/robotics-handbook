@@ -1,0 +1,31 @@
+[book]
+title = "Robotics Handbook: A Guide to Perception, Navigation, and Control"
+authors = ["Mitchell Scott"]
+language = "en"
+text-direction = "ltr"
+src = "src"
+
+[build]
+build-dir = "target/book"
+create-missing = true
+use-default-preprocessors = true
+
+[rust]
+edition = "2024"
+
+[output.html]
+default-theme = "ayu"
+preferred-dark-theme = "ayu"
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
+
+[output.html.playground]
+editable = true
+
+[preprocessor.katex]
+after = ["links"]
+block-delimiter = { left = "\\\\[", right = "\\\\]" }
+inline-delimiter = { left = "\\\\(", right = "\\\\)" }
+
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
