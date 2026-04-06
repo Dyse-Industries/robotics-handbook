@@ -1,4 +1,4 @@
-# Robotics Handbook
+# [Robotics Handbook](http://dyse-industries.github.io/robotics-handbook/)
 
 ![Workflow Status](https://github.com/mitchelldscott/robotics-handbook/actions/workflows/CI.yml/badge.svg)
 
