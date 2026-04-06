@@ -1,32 +1,68 @@
-FROM rust:1.94-slim-bullseye
-ARG NODE_VERSION=20
+# =============================================================================
+# Configure Build: Set parameters and tools for the build
+# =============================================================================
+ARG BASE_IMAGE=rust:1.90-slim-bullseye
+FROM ${BASE_IMAGE}
 
-# install dependencies
-RUN apt update && apt install -y curl git
-RUN apt-get update && apt-get install -y libssl-dev pkg-config build-essential && rm -rf /var/lib/apt/lists/*
+ENV USERNAME=mdyson
+ENV USER_UID=1000
+ENV USER_GID=1000
+ENV BASE_IMAGE=${BASE_IMAGE}
+ENV PROJECT_NAME=robotics-handbook
 
-# install nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+ENV SHELL=/bin/bash
+ENV PROJECT_NAME=${PROJECT_NAME}
+ENV USERNAME=mdyson
+ENV NODE_VERSION=22.0.0
 
-# set env
-ENV NVM_DIR=/root/.nvm
-ENV PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+# =============================================================================
+# Development Tools: Essential utilities for development
+# =============================================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sudo \
+    git \
+    vim \
+    curl \
+    wget \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    build-essential \
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/*
 
-# install node
-RUN bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use $NODE_VERSION"
+# =============================================================================
+# User Configuration: Set up workspace
+# =============================================================================
+RUN if id -u $USER_UID ; then userdel `id -un $USER_UID` ; fi
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-# install tools
-RUN bash -c "source $NVM_DIR/nvm.sh && npm install -g markdownlint-cli2"
+USER $USERNAME
 
+RUN echo "source /home/${USERNAME}/${PROJECT_NAME}/scripts/bash_prompt.bash" >> /home/${USERNAME}/.bashrc
+
+COPY ./ /home/${USERNAME}/${PROJECT_NAME}
+
+# =============================================================================
+# Project Configuration: instal dependencies
+# =============================================================================
+
+# Install Node.js for Prettier formatting
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - \
+    && sudo apt-get install -y nodejs
 
 # install cargo deps
-RUN cargo install mdbook --vers 0.4.52 --force
-RUN cargo install mdbook-katex --vers 0.9.4 --force
-RUN cargo install mdbook-mermaid --vers 0.16.2 --force
-RUN mdbook-mermaid install /workspaces/robotics-handbook
+# RUN /home/${USERNAME}/${PROJECT_NAME}/scripts/install_rust.bash
+RUN cargo install mdbook --vers 0.4.52 --force && \
+    cargo install mdbook-katex --vers 0.9.4 --force && \
+    cargo install mdbook-mermaid --vers 0.16.2 --force && \
+    mdbook-mermaid install /home/${USERNAME}/${PROJECT_NAME}
 
-
-# Simple entrypoint: load NVM
-WORKDIR /workspace
-ENTRYPOINT ["bash", "-c", "source $NVM_DIR/nvm.sh && exec \"$@\"", "--"]
+WORKDIR /home/${USERNAME}/${PROJECT_NAME}
 CMD ["/bin/bash"]

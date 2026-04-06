@@ -1,32 +1,29 @@
 {
     "name": "Robotics Handbook Development",
-    "build": {
-        "dockerfile": "Dockerfile",
-        "context": ".."
-    },
-    "remoteUser": "root",
-    "workspaceFolder": "/workspaces/robotics-handbook",
+    "dockerComposeFile": ["docker-compose.yaml"],
+    "service": "devcontainer",
+    "remoteUser": "mdyson",
+    "workspaceFolder": "/home/mdyson/robotics-handbook",
     // REQUIRED: Explicitly define the port to be forwarded.
     "forwardPorts": [
         8000
     ],
-    "postAttachCommand": "cargo run",
+    "postCreateCommand": "cargo run",
     // Extensions that should be installed inside the container for a better experience.
     "customizations": {
         "vscode": {
             "settings": {
                 // Settings specific to the dev container
-                "editor.formatOnSave": true
+                "editor.formatOnSave": true,
+                "editor.formatOnPaste": true
             },
             "extensions": [
                 "rust-lang.rust-analyzer",
                 "tamasfe.even-better-toml",
                 "redhat.vscode-yaml",
-                "davidanson.vscode-markdownlint",
                 "shd101wyy.markdown-preview-enhanced",
                 "streetsidesoftware.code-spell-checker",
                 "google.gemini-code-assist",
-                "njpwerner.autodocstring",
                 "ms-python.black-formatter",
                 "Compulim.compulim-vscode-closetag",
                 "google.geminicodeassist",
@@ -35,11 +32,10 @@
             ]
         }
     },
-    "remoteEnv": {
-        "NVM_DIR": "/root/.nvm"
-    },
     // Set up a volume for the cargo registry to speed up build times.
     "mounts": [
-        "source=mdbook-cargo-cache,target=/root/.cargo/registry,type=volume"
+        "source=mdbook-cargo-cache,target=/root/.cargo/registry,type=volume",
+        "source=~/.ssh,target=/home/mdsdev/.ssh,type=bind,consistency=cached",
+        "source=~/.gitconfig,target=/home/mdsdev/.gitconfig,type=bind,consistency=cached"
     ]
 }
